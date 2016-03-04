@@ -14,6 +14,7 @@ import android.view.MenuItem;
 
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.SystemRequirementsChecker;
+import com.estimote.sdk.Utils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -39,11 +40,17 @@ public class MainActivity extends AppCompatActivity {
         beaconManager.setRangingListener(new BeaconManager.RangingListener() {
             @Override
             public void onBeaconsDiscovered(Region region, List<Beacon> list) {
+                // V/SUCCESS: Beacon{macAddress=[DC:AE:29:60:F6:C4], proximityUUID=b9407f30-f5f8-466e-aff9-25556b57fe6d, major=63172, minor=10592, measuredPower=-74, rssi=-77} NEAR
                 if (!list.isEmpty()) {
                     Beacon nearestBeacon = list.get(0);
-                    String the_beacon = nearBeacons(nearestBeacon);
-                    // TODO: update the UI here
-                    Log.w("EXITO", the_beacon);
+                    if(Utils.computeProximity(nearestBeacon) == Utils.Proximity.NEAR){
+                        String the_beacon = nearBeacons(nearestBeacon);
+                        // TODO: update the UI here
+                        Log.v("SUCCESS", nearestBeacon+" "+Utils.computeProximity(nearestBeacon));
+                    }else{
+                        Log.e("ERROR", "TOO FAR "+Utils.computeProximity(nearestBeacon));
+                    }
+
                 }
             }
         });
