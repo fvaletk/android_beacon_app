@@ -2,6 +2,12 @@ package com.example.filibertovaletk.exitoone;
 
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.Region;
+
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -18,14 +24,14 @@ import com.estimote.sdk.Utils;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
     private BeaconManager beaconManager;
     private Region region;
-    private HashMap<String, String> myBeacons = new HashMap<String, String>();
+    private HashMap<String, HashMap<String, Boolean>> myBeacons = new HashMap<String, HashMap<String, Boolean>>();
+    private HashMap<String, Boolean> beaconObject = new HashMap<String, Boolean>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +40,8 @@ public class MainActivity extends AppCompatActivity {
 
         beaconManager = new BeaconManager(this);
 
-        myBeacons.put("63172:10592", "GOT YOUR BEACON");
+        beaconObject.put("detected", false);
+        myBeacons.put("63172:10592", beaconObject);
 
         // add this below:
         beaconManager.setRangingListener(new BeaconManager.RangingListener() {
@@ -44,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
                 if (!list.isEmpty()) {
                     Beacon nearestBeacon = list.get(0);
                     if(Utils.computeProximity(nearestBeacon) == Utils.Proximity.NEAR){
-                        String the_beacon = nearBeacons(nearestBeacon);
+                        beaconFachada(nearestBeacon);
                         // TODO: update the UI here
                         Log.v("SUCCESS", nearestBeacon+" "+Utils.computeProximity(nearestBeacon));
                     }else{
@@ -102,13 +109,47 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private String nearBeacons(Beacon beacon) {
+    private void beaconFachada(Beacon beacon){
         String beaconKey = String.format("%d:%d", beacon.getMajor(), beacon.getMinor());
-        if (myBeacons.containsKey(beaconKey)) {
-            myBeacons.put(beaconKey, "NEW VALUE");
-            Log.w("BEACON", "FOUNDED " + myBeacons.get(beaconKey));
-            return "founded";
+        if(isARegisteredBeacon(beacon, beaconKey) && !wasAlreadyDetected(beacon, beaconKey) ){
+            showNotification("Promocion", "Coca-Cola 2.5 Litros");
         }
-        return "none";
+    }
+
+    private boolean isARegisteredBeacon(Beacon beacon, String key) {
+        boolean is_registered = false;
+        if (myBeacons.containsKey(key)) {
+            Log.w("BEACON", "FOUNDED " + myBeacons.get(key));
+            is_registered = true;
+        }
+        return is_registered;
+    }
+
+    private boolean wasAlreadyDetected(Beacon beacon, String key){
+        boolean was_detected = true;
+        HashMap<String, Boolean> beacon_temp = myBeacons.get(key);
+        if(!beacon_temp.get("detected")){
+            beacon_temp.put("detected", true);
+            was_detected = false;
+        }
+        return was_detected;
+    }
+
+    public void showNotification(String title, String message) {
+        Intent notifyIntent = new Intent(this, MainActivity.class);
+        notifyIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivities(this, 0,
+                new Intent[] { notifyIntent }, PendingIntent.FLAG_UPDATE_CURRENT);
+        Notification notification = new Notification.Builder(this)
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .build();
+        notification.defaults |= Notification.DEFAULT_SOUND;
+        NotificationManager notificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(1, notification);
     }
 }
