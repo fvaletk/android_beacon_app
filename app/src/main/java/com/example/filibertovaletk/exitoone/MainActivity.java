@@ -17,11 +17,15 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ListView;
 
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.SystemRequirementsChecker;
 import com.estimote.sdk.Utils;
+import com.example.filibertovaletk.exitoone.adapters.PromotionAdapter;
+import com.example.filibertovaletk.exitoone.models.Promotions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -32,6 +36,10 @@ public class MainActivity extends AppCompatActivity {
     private Region region;
     private HashMap<String, HashMap<String, Boolean>> myBeacons = new HashMap<String, HashMap<String, Boolean>>();
     private HashMap<String, Boolean> beaconObject = new HashMap<String, Boolean>();
+    private ArrayList<Promotions> promotionsList = new ArrayList<Promotions>();
+    private Promotions promoOne = new Promotions("First Promo", "This is the first promo", "05/03/2016", "http://api.androidhive.info/json/movies/1.jpg");
+    private Promotions promoTwo = new Promotions("Second Promo", "This is the second promo", "05/03/2016", "http://api.androidhive.info/json/movies/2.jpg");
+    private Promotions promoThree = new Promotions("Third Promo", "This is the third promo", "05/03/2016", "http://api.androidhive.info/json/movies/3.jpg");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +51,10 @@ public class MainActivity extends AppCompatActivity {
         beaconObject.put("detected", false);
         myBeacons.put("63172:10592", beaconObject);
 
+        promotionsList.add(promoOne);
+        promotionsList.add(promoTwo);
+        promotionsList.add(promoThree);
+
         // add this below:
         beaconManager.setRangingListener(new BeaconManager.RangingListener() {
             @Override
@@ -50,12 +62,12 @@ public class MainActivity extends AppCompatActivity {
                 // V/SUCCESS: Beacon{macAddress=[DC:AE:29:60:F6:C4], proximityUUID=b9407f30-f5f8-466e-aff9-25556b57fe6d, major=63172, minor=10592, measuredPower=-74, rssi=-77} NEAR
                 if (!list.isEmpty()) {
                     Beacon nearestBeacon = list.get(0);
-                    if(Utils.computeProximity(nearestBeacon) == Utils.Proximity.NEAR){
+                    if (Utils.computeProximity(nearestBeacon) == Utils.Proximity.NEAR) {
                         beaconFachada(nearestBeacon);
                         // TODO: update the UI here
-                        Log.v("SUCCESS", nearestBeacon+" "+Utils.computeProximity(nearestBeacon));
-                    }else{
-                        Log.e("ERROR", "TOO FAR "+Utils.computeProximity(nearestBeacon));
+                        Log.v("SUCCESS", nearestBeacon + " " + Utils.computeProximity(nearestBeacon));
+                    } else {
+                        Log.e("ERROR", "TOO FAR " + Utils.computeProximity(nearestBeacon));
                     }
 
                 }
@@ -65,6 +77,9 @@ public class MainActivity extends AppCompatActivity {
         region = new Region("ranged region",
                 UUID.fromString("B9407F30-F5F8-466E-AFF9-25556B57FE6D"), null, null);
 
+        PromotionAdapter adapter = new PromotionAdapter(getApplicationContext(), R.layout.list_row, promotionsList);
+        ListView promotionListView = (ListView) findViewById(R.id.list);
+        promotionListView.setAdapter(adapter);
     }
 
     @Override
