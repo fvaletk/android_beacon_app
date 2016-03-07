@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private Promotions promoOne = new Promotions("First Promo", "This is the first promo", "05/03/2016", "http://api.androidhive.info/json/movies/1.jpg");
     private Promotions promoTwo = new Promotions("Second Promo", "This is the second promo", "05/03/2016", "http://api.androidhive.info/json/movies/2.jpg");
     private Promotions promoThree = new Promotions("Third Promo", "This is the third promo", "05/03/2016", "http://api.androidhive.info/json/movies/3.jpg");
+    private PromotionAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
         region = new Region("ranged region",
                 UUID.fromString("B9407F30-F5F8-466E-AFF9-25556B57FE6D"), null, null);
 
-        PromotionAdapter adapter = new PromotionAdapter(getApplicationContext(), R.layout.list_row, promotionsList);
+        adapter = new PromotionAdapter(getApplicationContext(), R.layout.list_row, promotionsList);
         ListView promotionListView = (ListView) findViewById(R.id.list);
         promotionListView.setAdapter(adapter);
     }
@@ -153,8 +154,9 @@ public class MainActivity extends AppCompatActivity {
     public void showNotification(String title, String message) {
         Intent notifyIntent = new Intent(this, MainActivity.class);
         notifyIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivities(this, 0,
-                new Intent[] { notifyIntent }, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        PendingIntent pendingIntent = PendingIntent.getActivities(this, 0, new Intent[] { notifyIntent }, PendingIntent.FLAG_UPDATE_CURRENT);
+
         Notification notification = new Notification.Builder(this)
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setContentTitle(title)
@@ -162,9 +164,19 @@ public class MainActivity extends AppCompatActivity {
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent)
                 .build();
+
         notification.defaults |= Notification.DEFAULT_SOUND;
-        NotificationManager notificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(1, notification);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        Log.w("NOTIFICATION","INTENT");
+        Promotions promoFourth = new Promotions("Fourth Promo", "This is the fourth promo", "05/03/2016", "http://api.androidhive.info/json/movies/4.jpg");
+        promotionsList.add(promoFourth);
+        adapter.notifyDataSetChanged();
     }
 }
